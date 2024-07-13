@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rastreo de Colectivo</title>
+</head>
+<body>
+  <h1>Rastreo de Colectivo</h1>
+  <button id="startTracking">Iniciar Rastreo</button>
+  <p id="status"></p>
+
+  <script>
+    const colectivoId = 1; // Puedes hacerlo dinámico si es necesario
+    const serverUrl = 'http://localhost:3000/update-location'; // Cambia esto a tu URL de servidor
+
+    document.getElementById('startTracking').addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+          position => {
+            const { latitude, longitude } = position.coords;
+            sendLocation(latitude, longitude);
+          },
+          error => {
+            document.getElementById('status').innerText = 'Error obteniendo ubicación: ' + error.message;
+          },
+          {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 5000
+          }
+        );
+      } else {
+        document.getElementById('status').innerText = 'Geolocalización no soportada por este navegador.';
+      }
+    });
+
+    const sendLocation = (lat, lng) => {
+      fetch(serverUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: colectivoId,
+          lat: lat,
+          lng: lng
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          document.getElementById('status').innerText = 'Ubicación enviada.';
+        } else {
+          document.getElementById('status').innerText = 'Error enviando ubicación.';
+        }
+      })
+      .catch(error => {
+        document.getElementById('status').innerText = 'Error enviando ubicación: ' + error.message;
+      });
+    };
+  </script>
+</body>
+</html>
